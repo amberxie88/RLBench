@@ -14,6 +14,7 @@ class TakeLidOffSaucepan(Task):
         self.lid = Shape('saucepan_lid_grasp_point')
         self.success_detector = ProximitySensor('success')
         self.register_graspable_objects([self.lid])
+        self.grasped_condition = GraspedCondition(self.robot.gripper, self.lid)
         cond_set = ConditionSet([
             GraspedCondition(self.robot.gripper, self.lid),
             DetectedCondition(self.lid, self.success_detector)
@@ -31,9 +32,23 @@ class TakeLidOffSaucepan(Task):
     def variation_count(self) -> int:
         return 1
 
+    # def reward(self) -> float:
+    #     grasp_lid_reward = -np.linalg.norm(
+    #         self.lid.get_position() - self.robot.arm.get_tip().get_position())
+    #     lift_lid_reward = -np.linalg.norm(
+    #         self.lid.get_position() - self.success_detector.get_position())
+    #     grasped_reward, _ = self.grasped_condition.condition_met()
+    #     return grasp_lid_reward + lift_lid_reward + int(grasped_reward)
+    
     def reward(self) -> float:
-        grasp_lid_reward = -np.linalg.norm(
-            self.lid.get_position() - self.robot.arm.get_tip().get_position())
-        lift_lid_reward = -np.linalg.norm(
-            self.lid.get_position() - self.success_detector.get_position())
-        return grasp_lid_reward + lift_lid_reward
+        grasped = self.grasped_condition.condition_met()[0]
+        
+        if not grasped:
+            grasp_lid_reward = np.exp(-np.linalg.norm(
+                self.lid.get_position() - self.robot.arm.get_tip().get_position()))
+            reward = grasp_lid_reward
+        else:
+            lift_lid_reward = np.exp(-np.linalg.norm(
+                self.lid.get_position() - self.success_detector.get_position()))
+            reward = 10. + lift_lid_reward
+        return reward

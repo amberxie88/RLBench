@@ -3,6 +3,8 @@ from pyrep.objects.shape import Shape
 from pyrep.objects.joint import Joint
 from rlbench.backend.task import Task
 from rlbench.backend.conditions import JointCondition,ConditionSet
+import numpy as np
+import math
 
 # button top plate and wrapper will be be red before task completion
 # and be changed to cyan upon success of task, so colors list used to randomly vary colors of
@@ -36,6 +38,7 @@ class PushButton(Task):
         self.target_topPlate = Shape('target_button_topPlate')
         self.joint = Joint('target_button_joint')
         self.target_wrap = Shape('target_button_wrap')
+        self.original_joint_pos = self.joint.get_joint_position()
         self.goal_condition = JointCondition(self.joint, 0.003)
 
     def init_episode(self, index: int) -> List[str]:
@@ -59,3 +62,14 @@ class PushButton(Task):
         if self.goal_condition.condition_met() == (True, True):
             self.target_topPlate.set_color([0.0, 1.0, 0.0])
             self.target_wrap.set_color([0.0, 1.0, 0.0])
+
+    def reward(self) -> float:
+        button_reach_reward = -np.linalg.norm(
+            self.target_button.get_position() - self.robot.arm.get_tip().get_position()
+        )
+
+        pos = self.joint.get_joint_position()
+        curr_cond = math.fabs(pos - self.original_joint_pos)
+        button_push_reward = 10. * min(curr_cond - 0.003, 0.0)
+
+        return button_reach_reward + button_push_reward

@@ -5,6 +5,7 @@ from pyrep.objects.proximity_sensor import ProximitySensor
 from rlbench.backend.task import Task
 from rlbench.backend.conditions import EmptyCondition
 from rlbench.backend.spawn_boundary import SpawnBoundary
+import numpy as np
 
 DIRT_POINTS = 50
 
@@ -60,3 +61,14 @@ class WipeDesk(Task):
                           max_rotation=(0.00, 0.00, 0.00))
             self.dirt_spots.append(spot)
         self.b.clear()
+    
+    def reward(self) -> float:
+        arm_sponge_dist = np.linalg.norm(
+            self.sponge.get_position() - self.robot.arm.get_tip().get_position())
+        reach_sponge_reward = -arm_sponge_dist
+        remove_spots_reward = -len(self.dirt_spots) / 10
+        if arm_sponge_dist < 0.05:
+            arm_motion_reward = np.linalg.norm(self.robot.arm.get_tip().get_velocity()[0][:2])
+        else: 
+            arm_motion_reward = 0
+        return reach_sponge_reward + remove_spots_reward + arm_motion_reward

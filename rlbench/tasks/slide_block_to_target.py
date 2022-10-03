@@ -1,10 +1,9 @@
 from typing import List
-
-import numpy as np
 from pyrep.objects.shape import Shape
 from pyrep.objects.proximity_sensor import ProximitySensor
 from rlbench.backend.task import Task
 from rlbench.backend.conditions import DetectedCondition
+import numpy as np
 
 
 class SlideBlockToTarget(Task):
@@ -26,15 +25,10 @@ class SlideBlockToTarget(Task):
 
     def variation_count(self) -> int:
         return 1
-
-    def get_low_dim_state(self) -> np.ndarray:
-        # One of the few tasks that have a custom low_dim_state function.
-        return np.concatenate([
-            self._block.get_position(), self._target.get_position()])
-
+    
     def reward(self) -> float:
-        grip_to_block = -np.linalg.norm(
+        reach_reward = -np.linalg.norm(
             self._block.get_position() - self.robot.arm.get_tip().get_position())
-        block_to_target = -np.linalg.norm(
-            self._block.get_position() - self._target.get_position())
-        return grip_to_block + block_to_target
+        push_reward = -np.linalg.norm(
+            self._target.get_position() - self._block.get_position())
+        return reach_reward + push_reward
