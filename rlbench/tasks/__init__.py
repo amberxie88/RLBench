@@ -41,6 +41,9 @@ from rlbench.tasks.open_wine_bottle import OpenWineBottle
 from rlbench.tasks.phone_on_base import PhoneOnBase
 from rlbench.tasks.pick_and_lift import PickAndLift
 from rlbench.tasks.pick_and_lift_small import PickAndLiftSmall
+from rlbench.tasks.pick_from_container import PickFromContainer
+from rlbench.tasks.pick_shapenet_objects import PickShapenetObjects
+from rlbench.tasks.pick_shapenet_test import PickShapenetTest
 from rlbench.tasks.pick_up_cup import PickUpCup
 from rlbench.tasks.place_cups import PlaceCups
 from rlbench.tasks.place_hanger_on_rack import PlaceHangerOnRack
@@ -110,6 +113,8 @@ from rlbench.tasks.unplug_charger import UnplugCharger
 from rlbench.tasks.water_plants import WaterPlants
 from rlbench.tasks.weighing_scales import WeighingScales
 from rlbench.tasks.wipe_desk import WipeDesk
+from rlbench.tasks.multi_task_microfridgesauce import MultiTaskMicrofridgesauce
+from rlbench.tasks.multi_task_microfridgetap import MultiTaskMicrofridgetap
 
 FS10_V1 = {
     'train': [

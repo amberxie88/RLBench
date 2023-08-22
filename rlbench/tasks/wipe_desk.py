@@ -1,11 +1,12 @@
 from typing import List
+
+import numpy as np
 from pyrep.const import PrimitiveShape
 from pyrep.objects.shape import Shape
 from pyrep.objects.proximity_sensor import ProximitySensor
 from rlbench.backend.task import Task
-from rlbench.backend.conditions import EmptyCondition
+from rlbench.backend.conditions import EmptyCondition, GraspedCondition
 from rlbench.backend.spawn_boundary import SpawnBoundary
-import numpy as np
 
 DIRT_POINTS = 50
 
@@ -21,9 +22,12 @@ class WipeDesk(Task):
         boundaries = [Shape('dirt_boundary')]
         _, _, self.z_boundary = boundaries[0].get_position()
         self.b = SpawnBoundary(boundaries)
+        self._grasped_cond = GraspedCondition(self.robot.gripper, self.sponge)
+        self.dirt_rew_scale = 3.
 
     def init_episode(self, index: int) -> List[str]:
         self._place_dirt()
+        self.num_removed_dirt = 0
         self.register_success_conditions([EmptyCondition(self.dirt_spots)])
         return ['wipe dirt off the desk',
                 'use the sponge to clean up the desk',
@@ -36,11 +40,29 @@ class WipeDesk(Task):
     def variation_count(self) -> int:
         return 1
 
+    def reward(self) -> float:
+        grasped = self._grasped_cond.condition_met()[0]
+
+        if not grasped:
+            grasp_reward = np.exp(
+                -np.linalg.norm(
+                    self.sponge.get_position() - self.robot.arm.get_tip().get_position()
+                )
+            )
+        else:
+            grasp_reward = 1.
+            
+        dirt_reward = self.dirt_rew_scale * self.num_removed_dirt / DIRT_POINTS
+        reward = grasp_reward + dirt_reward
+
+        return reward
+
     def step(self) -> None:
         for d in self.dirt_spots:
             if self.sensor.is_detected(d):
                 self.dirt_spots.remove(d)
                 d.remove()
+                self.num_removed_dirt += 1.
 
     def cleanup(self) -> None:
         for d in self.dirt_spots:
@@ -61,14 +83,9 @@ class WipeDesk(Task):
                           max_rotation=(0.00, 0.00, 0.00))
             self.dirt_spots.append(spot)
         self.b.clear()
-    
-    def reward(self) -> float:
-        arm_sponge_dist = np.linalg.norm(
-            self.sponge.get_position() - self.robot.arm.get_tip().get_position())
-        reach_sponge_reward = -arm_sponge_dist
-        remove_spots_reward = -len(self.dirt_spots) / 10
-        if arm_sponge_dist < 0.05:
-            arm_motion_reward = np.linalg.norm(self.robot.arm.get_tip().get_velocity()[0][:2])
-        else: 
-            arm_motion_reward = 0
-        return reach_sponge_reward + remove_spots_reward + arm_motion_reward
+
+    def get_low_dim_state(self) -> np.ndarray:
+        # For ad-hoc reward computation, attach reward
+        reward = self.reward()
+        state = super().get_low_dim_state()
+        return np.hstack([reward, state])

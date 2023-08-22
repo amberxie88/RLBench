@@ -45,6 +45,7 @@ class Task(object):
         self._waypoints_should_repeat = lambda: False
         self._initial_objs_in_scene = None
         self._stop_at_waypoint_index = -1
+        self.multitask_env = False
 
     ########################
     # Overriding functions #
@@ -369,6 +370,9 @@ class Task(object):
         return True, -1
 
     def _get_waypoints(self, validating=False) -> List[Waypoint]:
+        if self.multitask_env:
+            return self._get_multi_waypoints(validating=validating)
+
         waypoint_name = 'waypoint%d'
         waypoints = []
         additional_waypoint_inits = []
@@ -404,6 +408,53 @@ class Task(object):
                     (self._waypoint_additional_inits[name], way))
             waypoints.append(way)
             i += 1
+
+        # Check if all of the waypoints are feasible
+        feasible, way_i = self._feasible(waypoints)
+        if not feasible:
+            raise WaypointError(
+                "Infeasible episode. Can't reach waypoint %d." % way_i, self)
+        for func, way in additional_waypoint_inits:
+            func(way)
+        return waypoints
+
+    def _get_multi_waypoints(self, validating=False) -> List[Waypoint]:
+        waypoints = []
+        for tid in range(len(self._success_conditions)): # hardcoded. Un-hardcode later
+            waypoint_name = f'task{tid}_waypoint%d'
+            additional_waypoint_inits = []
+            i = 0
+            while True:
+                name = waypoint_name % i
+                if not Object.exists(name) or i == self._stop_at_waypoint_index:
+                    # There are no more waypoints...
+                    break
+                ob_type = Object.get_object_type(name)
+                way = None
+                if ob_type == ObjectType.DUMMY:
+                    waypoint = Dummy(name)
+                    start_func = None
+                    end_func = None
+                    if i in self._waypoint_abilities_start:
+                        start_func = self._waypoint_abilities_start[i]
+                    if i in self._waypoint_abilities_end:
+                        end_func = self._waypoint_abilities_end[i]
+                    way = Point(waypoint, self.robot,
+                                start_of_path_func=start_func,
+                                end_of_path_func=end_func)
+                elif ob_type == ObjectType.PATH:
+                    cartestian_path = CartesianPath(name)
+                    way = PredefinedPath(cartestian_path, self.robot)
+                else:
+                    raise WaypointError(
+                        '%s is an unsupported waypoint type %s' % (
+                            name, ob_type), self)
+
+                if name in self._waypoint_additional_inits and not validating:
+                    additional_waypoint_inits.append(
+                        (self._waypoint_additional_inits[name], way))
+                waypoints.append(way)
+                i += 1
 
         # Check if all of the waypoints are feasible
         feasible, way_i = self._feasible(waypoints)

@@ -1,4 +1,5 @@
 from typing import List, Tuple
+
 import numpy as np
 from pyrep.objects.joint import Joint
 from pyrep.objects.object import Object
@@ -7,9 +8,7 @@ from rlbench.backend.conditions import JointCondition
 from rlbench.backend.task import Task
 import math
 
-
 class CloseMicrowave(Task):
-
     def init_task(self) -> None:
         self.register_success_conditions([JointCondition(
             Joint('microwave_door_joint'), np.deg2rad(40))])
@@ -30,7 +29,10 @@ class CloseMicrowave(Task):
 
     def boundary_root(self) -> Object:
         return Shape('boundary_root')
-    
+
+    def change_reward(self, task) -> None:
+        self.reward_lang = task
+
     def reward(self) -> float:
         arm_door_dist = np.linalg.norm(
             self.door.get_position() - self.robot.arm.get_tip().get_position())

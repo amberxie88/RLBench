@@ -11,6 +11,7 @@ from rlbench.backend.task import TASKS_PATH
 from rlbench.backend.robot import Robot
 import numpy as np
 import os
+import time
 import argparse
 
 DEMO_ATTEMPTS = 5
@@ -79,6 +80,7 @@ def task_smoke(task: Task, scene: Scene, variation=-1, demos=4, success=0.50,
             if test_demos:
                 print('%d of %d demos were successful.' % (
                     demos - failed_demos, demos))
+        time.sleep(8)
 
     def run_demos(variation_num):
         fails = 0

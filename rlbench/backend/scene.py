@@ -252,7 +252,8 @@ class Scene(object):
                               wc_mask_fn) if wc_ob.mask else None
         front_mask = get_mask(self._cam_front_mask,
                               fc_mask_fn) if fc_ob.mask else None
-
+        # rgb = self.task.goal_sensor.capture_rgb()
+        # overhead_rgb = np.clip((rgb * 255.).astype(np.uint8), 0, 255)
         obs = Observation(
             left_shoulder_rgb=left_shoulder_rgb,
             left_shoulder_depth=left_shoulder_depth,

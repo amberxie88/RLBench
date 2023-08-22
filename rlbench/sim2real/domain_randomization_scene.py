@@ -68,7 +68,9 @@ class DomainRandomizationScene(Scene):
         if self._visual_rand_config is not None:
             files = self._visual_rand_config.sample(len(tree))
             for file, obj in zip(files, tree):
+                print('Applying texture %s to %s?' % (file, obj.get_name()))
                 if self._visual_rand_config.should_randomize(obj.get_name()):
+                    print('Yes, applying texture %s to %s' % (file, obj.get_name()))
                     text_ob, texture = self.pyrep.create_texture(file)
                     try:
                         obj.set_texture(texture, **TEX_KWARGS)

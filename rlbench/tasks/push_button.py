@@ -1,11 +1,11 @@
 from typing import List
+
 from pyrep.objects.shape import Shape
 from pyrep.objects.joint import Joint
 from rlbench.backend.task import Task
 from rlbench.backend.conditions import JointCondition,ConditionSet
 import numpy as np
 import math
-
 # button top plate and wrapper will be be red before task completion
 # and be changed to cyan upon success of task, so colors list used to randomly vary colors of
 # base block will be redefined, excluding red and green
@@ -29,10 +29,7 @@ colors = [
     ('black', (0.0, 0.0, 0.0)),
     ('white', (1.0, 1.0, 1.0)),
 ]
-
-
 class PushButton(Task):
-
     def init_task(self):
         self.target_button = Shape('push_button_target')
         self.target_topPlate = Shape('target_button_topPlate')
@@ -40,7 +37,7 @@ class PushButton(Task):
         self.target_wrap = Shape('target_button_wrap')
         self.original_joint_pos = self.joint.get_joint_position()
         self.goal_condition = JointCondition(self.joint, 0.003)
-
+    
     def init_episode(self, index: int) -> List[str]:
         self._variation_index = index
         self.target_topPlate.set_color([1.0, 0.0, 0.0])
@@ -54,22 +51,23 @@ class PushButton(Task):
                 'push down the %s button' % button_color_name,
                 'press the button with the %s base' % button_color_name,
                 'press the %s button' % button_color_name]
-
+    
     def variation_count(self) -> int:
         return len(colors)
-
+    
     def step(self) -> None:
         if self.goal_condition.condition_met() == (True, True):
             self.target_topPlate.set_color([0.0, 1.0, 0.0])
             self.target_wrap.set_color([0.0, 1.0, 0.0])
 
+    def change_reward(self, task) -> None:
+        self.reward_lang = task
+    
     def reward(self) -> float:
         button_reach_reward = -np.linalg.norm(
             self.target_button.get_position() - self.robot.arm.get_tip().get_position()
         )
-
         pos = self.joint.get_joint_position()
         curr_cond = math.fabs(pos - self.original_joint_pos)
         button_push_reward = 10. * min(curr_cond - 0.003, 0.0)
-
         return button_reach_reward + button_push_reward

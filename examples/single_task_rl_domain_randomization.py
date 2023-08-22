@@ -7,7 +7,7 @@ from rlbench import VisualRandomizationConfig
 from rlbench.action_modes.action_mode import MoveArmThenGripper
 from rlbench.action_modes.arm_action_modes import JointVelocity
 from rlbench.action_modes.gripper_action_modes import Discrete
-from rlbench.tasks import ReachTarget
+from rlbench.tasks import ReachTarget, PickShapenetObjects
 
 
 class Agent(object):
@@ -37,7 +37,8 @@ env = Environment(
 )
 env.launch()
 
-task = env.get_task(ReachTarget)
+# task = env.get_task(ReachTarget)
+task = env.get_task(PickShapenetObjects)
 
 agent = Agent(env.action_shape)
 

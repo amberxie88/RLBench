@@ -18,6 +18,7 @@ from rlbench.observation_config import ObservationConfig
 from rlbench.sim2real.domain_randomization import RandomizeEvery, \
     VisualRandomizationConfig, DynamicsRandomizationConfig
 from rlbench.sim2real.domain_randomization_scene import DomainRandomizationScene
+from rlbench.sim2real.objectwise_randomization_scene import ObjectwiseRandomizationScene
 from rlbench.task_environment import TaskEnvironment
 
 DIR_PATH = dirname(abspath(__file__))
@@ -38,7 +39,8 @@ class Environment(object):
                  visual_randomization_config: VisualRandomizationConfig = None,
                  dynamics_randomization_config: DynamicsRandomizationConfig = None,
                  attach_grasped_objects: bool = True,
-                 shaped_rewards: bool = False
+                 shaped_rewards: bool = False,
+                 tex_kwargs: list = None
                  ):
 
         self._dataset_root = dataset_root
@@ -54,6 +56,7 @@ class Environment(object):
         self._dynamics_randomization_config = dynamics_randomization_config
         self._attach_grasped_objects = attach_grasped_objects
         self._shaped_rewards = shaped_rewards
+        self._tex_kwargs = tex_kwargs
 
         if robot_setup not in SUPPORTED_ROBOTS.keys():
             raise ValueError('robot_configuration must be one of %s' %
@@ -115,6 +118,13 @@ class Environment(object):
         if self._randomize_every is None:
             self._scene = Scene(
                 self._pyrep, self._robot, self._obs_config, self._robot_setup)
+        elif hasattr(self._visual_randomization_config, '__len__'):
+            self._scene = ObjectwiseRandomizationScene(
+                self._pyrep, self._robot, self._obs_config, self._robot_setup,
+                self._randomize_every, self._frequency,
+                self._visual_randomization_config,
+                self._dynamics_randomization_config,
+                self._tex_kwargs)
         else:
             self._scene = DomainRandomizationScene(
                 self._pyrep, self._robot, self._obs_config, self._robot_setup,

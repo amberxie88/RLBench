@@ -3,11 +3,13 @@ from pyrep.robots.arms.mico import Mico
 from pyrep.robots.arms.panda import Panda
 from pyrep.robots.arms.sawyer import Sawyer
 from pyrep.robots.arms.ur5 import UR5
+from pyrep.robots.arms.xarm7 import XArm7
 from pyrep.robots.end_effectors.baxter_gripper import BaxterGripper
 from pyrep.robots.end_effectors.jaco_gripper import JacoGripper
 from pyrep.robots.end_effectors.mico_gripper import MicoGripper
 from pyrep.robots.end_effectors.panda_gripper import PandaGripper
 from pyrep.robots.end_effectors.robotiq85_gripper import Robotiq85Gripper
+from pyrep.robots.end_effectors.xarm_gripper import XArmGripper
 
 
 colors = [
@@ -41,4 +43,5 @@ SUPPORTED_ROBOTS = {
     'mico': (Mico, MicoGripper, 6),
     'sawyer': (Sawyer, BaxterGripper, 7),
     'ur5': (UR5, Robotiq85Gripper, 6),
+    'xarm': (XArm7, XArmGripper, 7),
 }

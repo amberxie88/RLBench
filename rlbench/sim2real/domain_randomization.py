@@ -36,7 +36,7 @@ class Uniform(Distributions):
         return np.random.uniform(self._min, self._max, val.shape)
 
 
-EXTENSIONS = ['*.jpg', '*.png']
+EXTENSIONS = ['*.png']
 
 
 class RandomizationConfig(object):
@@ -51,8 +51,8 @@ class RandomizationConfig(object):
 
     def should_randomize(self, obj_name: str):
         return ((self.whitelist is None and len(self.blacklist) == 0) or
-                (self.whitelist is not None and obj_name in self.whitelist) or
-                (obj_name not in self.blacklist)) and (
+                (self.whitelist is not None and obj_name in self.whitelist)) and (
+                obj_name not in self.blacklist) and (
                 self.randomize_arm or 'panda' not in obj_name.lower())
 
 
@@ -73,6 +73,8 @@ class VisualRandomizationConfig(RandomizationConfig):
             raise NotADirectoryError(
                 'The supplied image directory (%s) does not exist!' %
                 image_directory)
+        print([glob.glob(
+            os.path.join(image_directory, e)) for e in EXTENSIONS])
         self._imgs = np.array([glob.glob(
             os.path.join(image_directory, e)) for e in EXTENSIONS])
         self._imgs = np.concatenate(self._imgs)

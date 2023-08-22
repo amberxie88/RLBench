@@ -1,16 +1,13 @@
 from typing import List
+
 import numpy as np
 import math
 from pyrep.objects.dummy import Dummy
 from pyrep.objects.joint import Joint
 from rlbench.backend.task import Task
 from rlbench.backend.conditions import JointCondition
-
 OPTIONS = ['left', 'right']
-
-
 class TurnTap(Task):
-
     def init_task(self) -> None:
         self.left_start = Dummy('waypoint0')
         self.left_end = Dummy('waypoint1')
@@ -18,7 +15,7 @@ class TurnTap(Task):
         self.right_end = Dummy('waypoint6')
         self.left_joint = Joint('left_joint')
         self.right_joint = Joint('right_joint')
-
+    
     def init_episode(self, index: int) -> List[str]:
         self.option = OPTIONS[index]
         if self.option == 'right':
@@ -33,17 +30,19 @@ class TurnTap(Task):
             self.register_success_conditions(
                 [JointCondition(self.left_joint, 1.57)])
             self.original_handle_position = self.left_joint.get_joint_position()
-
         return ['turn %s tap' % self.option,
                 'rotate the %s tap' % self.option,
                 'grasp the %s tap and turn it' % self.option]
-
+    
     def variation_count(self) -> int:
         return 2
 
     def get_low_dim_state(self) -> np.ndarray:
         return np.concatenate(([self.right_joint.get_joint_position()], self.right_joint.get_position(),
                             [self.left_joint.get_joint_position()], self.right_joint.get_position()))
+    
+    def change_reward(self, task) -> None:
+        self.reward_lang = task
 
     def reward(self) -> float:
         if self.option == 'right':

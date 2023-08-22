@@ -26,5 +26,8 @@ class ToiletSeatDown(Task):
     def variation_count(self) -> int:
         return 1
 
+    def change_reward(self, task) -> None:
+        self.reward_lang = task
+        
     def base_rotation_bounds(self) -> Tuple[List[float], List[float]]:
         return [0.0, 0.0, -np.pi / 4.], [0.0, 0.0, np.pi / 4.]
